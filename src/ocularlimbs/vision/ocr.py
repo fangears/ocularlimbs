@@ -183,30 +183,48 @@ class OCRRecognizer:
     def __init__(self, config: VisionConfig):
         self.config = config
         self.engine: Optional[OCREngine] = None
+        self.available = False
         self._init_engine()
+
+    @property
+    def is_available(self) -> bool:
+        """OCR 是否可用"""
+        return self.available
 
     def _init_engine(self):
         """根据配置初始化 OCR 引擎"""
         engine_type = self.config.ocr_engine.lower()
 
-        if engine_type == "paddleocr":
-            if PADDLEOCR_AVAILABLE:
-                self.engine = PaddleOCREngine(self.config)
-            else:
-                print("PaddleOCR 不可用，回退到 Tesseract")
+        try:
+            if engine_type == "paddleocr":
+                if PADDLEOCR_AVAILABLE:
+                    self.engine = PaddleOCREngine(self.config)
+                    self.available = True
+                else:
+                    # PaddleOCR 不可用，回退到 Tesseract
+                    if TESSERACT_AVAILABLE:
+                        self.engine = TesseractEngine(self.config)
+                        self.available = True
+                    else:
+                        # 都不可用，设置为不可用状态
+                        self.available = False
+
+            else:  # tesseract (默认)
                 if TESSERACT_AVAILABLE:
                     self.engine = TesseractEngine(self.config)
+                    self.available = True
                 else:
-                    raise RuntimeError("没有可用的 OCR 引擎，请安装 pytesseract 或 paddleocr")
+                    # Tesseract 不可用，设置为不可用状态
+                    self.available = False
 
-        else:  # tesseract (默认)
-            if TESSERACT_AVAILABLE:
-                self.engine = TesseractEngine(self.config)
-            else:
-                raise RuntimeError("Tesseract 不可用，请运行: pip install pytesseract")
+        except Exception as e:
+            # 初始化失败，OCR 不可用（静默模式）
+            self.available = False
 
     def recognize(self, capture: ScreenCapture, **kwargs) -> List[TextRegion]:
         """识别文字"""
+        if not self.available or self.engine is None:
+            return []
         return self.engine.recognize(capture, **kwargs)
 
     def find_text(
@@ -228,6 +246,9 @@ class OCRRecognizer:
         Returns:
             找到的文字区域，如果没找到返回 None
         """
+        if not self.available or self.engine is None:
+            return None
+
         regions = self.recognize(capture)
 
         for region in regions:
@@ -251,6 +272,9 @@ class OCRRecognizer:
         case_sensitive: bool = False
     ) -> List[TextRegion]:
         """查找所有匹配的文字"""
+        if not self.available or self.engine is None:
+            return []
+
         regions = self.recognize(capture)
         results = []
 

@@ -7,7 +7,7 @@ from typing import List, Optional, Tuple
 import io
 from PIL import Image
 
-from .capture import ScreenCapture as ScreenCaptureDevice
+from .capture import ScreenCaptureDevice
 from .ocr import OCRRecognizer
 from .ui_parser import UIElementDetector, VisualDebugger
 from .diff_detector import DiffDetector, MotionDetector
@@ -26,7 +26,17 @@ class VisionModule:
 
         # 初始化子模块
         self.capture = ScreenCaptureDevice(config)
-        self.ocr = OCRRecognizer(config)
+
+        # OCR 可选初始化（静默模式，不输出调试信息以避免干扰 MCP 协议）
+        try:
+            self.ocr = OCRRecognizer(config)
+            if not self.ocr.is_available:
+                # OCR 不可用，静默继续
+                pass
+        except Exception as e:
+            # OCR 初始化失败，静默设置 None
+            self.ocr = None
+
         self.ui_detector = UIElementDetector(config)
         self.diff_detector = DiffDetector(config)
         self.motion_detector = MotionDetector(config)
@@ -75,6 +85,9 @@ class VisionModule:
         Returns:
             识别到的文字区域列表
         """
+        if self.ocr is None or not self.ocr.is_available:
+            return []
+
         if capture is None:
             capture = self._last_capture
 
@@ -104,6 +117,9 @@ class VisionModule:
         Returns:
             找到的文字区域，如果没找到返回 None
         """
+        if self.ocr is None or not self.ocr.is_available:
+            return None
+
         if capture is None:
             capture = self._last_capture
 
@@ -116,6 +132,9 @@ class VisionModule:
         case_sensitive: bool = False
     ) -> List[TextRegion]:
         """查找所有匹配的文字"""
+        if self.ocr is None or not self.ocr.is_available:
+            return []
+
         if capture is None:
             capture = self._last_capture
 
@@ -238,8 +257,8 @@ class VisionModule:
         # 捕获屏幕
         capture = self.capture_screen(screen_index)
 
-        # 识别文字
-        texts = self.recognize_text(capture)
+        # 识别文字（如果 OCR 可用）
+        texts = self.recognize_text(capture) if self.ocr and self.ocr.is_available else []
 
         # 解析 UI
         elements = self.parse_ui(capture)
