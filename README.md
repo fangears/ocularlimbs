@@ -25,7 +25,7 @@ OcularLimbs 通过 MCP (Model Context Protocol) 为 Claude Code 提供：
 
 ```bash
 # 克隆仓库
-git clone https://github.com/anthropics/ocularlimbs.git
+git clone https://github.com/fangears/ocularlimbs.git
 cd ocularlimbs
 
 # 运行安装脚本
