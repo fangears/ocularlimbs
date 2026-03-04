@@ -1,260 +1,399 @@
-# OcularLimbs - AI 的眼和手脚
+# OcularLimbs - AI 的眼睛和手脚
 
-> Eyes and Hands for Claude Code - 计算机视觉和自动化框架
+> 为 AI Claude 提供真正的视觉和操作能力，一键安装，开箱即用！
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![MCP](https://img.shields.io/badge/MCP-Protocol-green.svg)](https://modelcontextprotocol.io/)
+## 🎯 这是什么？
 
-> **参考项目**: [everything-claude-code](https://github.com/affaan-m/everything-claude-code) - 项目结构灵感来源
+OcularLimbs 是一个**完整的 AI Agent 系统**，让 Claude 可以：
+- **👁️ 看见**：实时捕获屏幕、识别文字、理解 UI
+- **🧠 思考**：规划任务、做出决策、学习经验
+- **🦾 行动**：控制鼠标、键盘、窗口操作
 
-## ✨ 特性
+**一句话：让 AI 真正地使用电脑！**
 
-OcularLimbs 通过 MCP (Model Context Protocol) 为 Claude Code 提供：
+## ⚡ 一键安装（推荐）
 
-- **👁️ 视觉能力**：实时屏幕捕获、OCR 文字识别、UI 元素理解
-- **🦾 操作能力**：鼠标点击、键盘输入、窗口管理
-- **🧠 智能理解**：自动分析屏幕内容、识别 UI 结构
-- **⚡ 极速响应**：优化的图像压缩、毫秒级操作响应
-- **🔌 无缝集成**：作为 Claude Code 插件和 MCP 服务器
-- **🎯 一键安装**：自动配置，开箱即用
+### Windows 用户
+
+```
+双击运行: 一键安装.bat
+```
+
+就这么简单！
+
+安装完成后：
+- ✅ 桌面快捷方式
+- ✅ 开机自动启动
+- ✅ 图形化控制面板
+- ✅ Web 管理界面
+
+### 命令行安装
+
+```bash
+# 运行安装脚本
+python install.py
+
+# 或使用 GUI 控制面板
+python gui_launcher.py
+```
 
 ## 🚀 快速开始
 
-### 方式 1: 作为 Claude Code 插件安装（推荐）
+### 第一次使用
 
-```bash
-# 克隆仓库
-git clone https://github.com/fangears/ocularlimbs.git
-cd ocularlimbs
+1. **启动服务**
+   - 双击桌面 "OcularLimbs" 图标
+   - 或运行 `gui_launcher.py`
 
-# 运行安装脚本
-./install.sh
-```
+2. **打开控制界面**
+   - 浏览器自动打开 http://localhost:8848
+   - 或手动访问
 
-安装脚本会自动：
-1. ✅ 安装 Python 依赖
-2. ✅ 配置 MCP 服务器到 Claude Code
-3. ✅ 安装技能和命令
+3. **开始使用**
+   - 在 Web 界面点击功能按钮
+   - 或使用 Python SDK
 
-### 方式 2: 手动安装
-
-```bash
-# 安装 Python 包
-pip install -e .
-
-# 配置 MCP 服务器（添加到 ~/.claude/settings.json）
-{
-  "mcpServers": {
-    "ocularlimbs": {
-      "command": "python",
-      "args": ["-m", "ocularlimbs.mcp_server"],
-      "env": {}
-    }
-  }
-}
-
-# 复制技能文件
-cp -r skills/ocularlimbs ~/.claude/skills/
-```
-
-## 📖 在 Claude Code 中使用
-
-安装完成后，重启 Claude Code，然后就可以直接使用：
-
-### 通过 MCP 工具使用
-
-```
-# 查看屏幕
-请帮我看看当前屏幕上有什么
-
-# 捕获截图
-捕获当前屏幕并保存为 test.png
-
-# 查找并点击
-查找屏幕上的"确定"按钮并点击
-
-# 输入文本
-在当前位置输入 "Hello World"
-
-# 执行任务
-打开计算器并计算 123 + 456
-```
-
-### 通过命令使用
-
-```
-/see          # 查看屏幕
-/capture      # 捕获截图
-/click 确定   # 点击文字
-```
-
-### 通过技能使用
-
-Claude 会自动使用 `skills/ocularlimbs/SKILL.md` 中的最佳实践。
-
-## 🛠️ Python SDK
-
-也可以在 Python 代码中直接使用：
+### Python 使用示例
 
 ```python
-from ocularlimbs import see, capture, click, type_text
+from ocularlimbs_client import see, capture, click, type_text
 
 # 查看屏幕
-screen = see()
-print(f"屏幕: {screen['width']}x{screen['height']}")
+info = see()
 
 # 捕获截图
-capture('test.png')
+capture(save_path='screenshot.png')
 
-# 查找并点击文字
-from ocularlimbs import click_text
-click_text("确定")
-
-# 点击坐标
+# 点击操作
 click(100, 200)
 
 # 输入文本
 type_text("Hello World")
+```
 
-# 按键
-from ocularlimbs import press_key
-press_key('enter')
+## 📊 核心功能
+
+### 1. 视觉能力 👁️
+
+| 功能 | 说明 | API |
+|------|------|-----|
+| 屏幕捕获 | 实时获取屏幕 | `see()` |
+| OCR 识别 | 识别屏幕文字 | `find_text("text")` |
+| UI 理解 | 识别按钮、输入框 | `see()['elements']` |
+| 差异检测 | 检测屏幕变化 | `compare(before, after)` |
+
+### 2. 操作能力 🦾
+
+| 功能 | 说明 | API |
+|------|------|-----|
+| 鼠标控制 | 点击、拖拽、滚动 | `click(x, y)` |
+| 键盘输入 | 输入文本、快捷键 | `type_text("Hello")` |
+| 窗口操作 | 激活、移动、关闭 | `activate_window("Notepad")` |
+| 安全保护 | 防止误操作 | `safety_enabled=True` |
+
+### 3. 智能压缩 📦
+
+| 预设 | 大小 | 说明 |
+|------|------|------|
+| ultra_fast | 45 KB | 实时监控 |
+| fast | 74 KB | 日常使用 |
+| balanced | 137 KB | 推荐 ⭐ |
+| quality | 231 KB | 高质量 |
+| archival | 433 KB | 无损存档 |
+
+### 4. 自动清理 🧹
+
+| 规则 | 说明 |
+|------|------|
+| 重复检测 | MD5 哈希值 |
+| 质量检测 | 尺寸、黑屏、模糊 |
+| 过期清理 | 自动删除旧文件 |
+| 损坏检测 | 自动修复或删除 |
+
+## 🎮 使用场景
+
+### 场景 1: 自动化测试
+
+```python
+# 打开应用
+execute("打开计算器")
+
+# 执行操作
+click(500, 400)
+type_text("123+456=")
+
+# 验证结果
+capture(save_path='result.png')
+```
+
+### 场景 2: RPA 自动化
+
+```python
+# 批量处理
+for file in files:
+    execute(f"打开 {file}")
+    execute("点击保存")
+    execute("关闭")
+```
+
+### 场景 3: 游戏辅助
+
+```python
+# 类似 BetterGI
+while True:
+    see()  # 观察屏幕
+    click(find("怪物"))
+    time.sleep(1)
+```
+
+### 场景 4: 屏幕监控
+
+```python
+# 定时截图
+while True:
+    capture(save_time=f'auto_{time.time()}.png')
+    time.sleep(60)
 ```
 
 ## 📁 项目结构
 
 ```
-ocularlimbs-unified/
-├── .claude-plugin/         # Claude Code 插件配置
-│   └── plugin.json         # 插件元数据
-├── install.sh              # 一键安装脚本
-├── requirements.txt        # Python 依赖
-├── setup.py               # 包配置
-├── mcp-configs/           # MCP 配置示例
-│   └── ocularlimbs.json
-├── skills/                # Claude Code 技能
-│   └── ocularlimbs/
-│       └── SKILL.md       # 眼手工具使用指南
-├── commands/              # Claude Code 命令
-│   ├── see.md
-│   ├── capture.md
-│   └── click.md
-├── src/
-│   └── ocularlimbs/
-│       ├── __init__.py    # 包入口
-│       ├── client.py      # 客户端 API
-│       ├── mcp_server.py  # MCP 服务器
-│       ├── service.py     # 后台 HTTP 服务
-│       ├── core/          # 核心模块
-│       ├── vision/        # 视觉模块
-│       ├── action/        # 操作模块
-│       └── planning/      # 规划模块
-└── tests/                # 测试文件
+ocularlimbs/
+├── 🎯 一键安装.bat           # Windows 一键安装
+├── 🎮 gui_launcher.py        # 图形化控制面板
+├── 🚀 start_service.py       # 快速启动脚本
+│
+├── core/                     # 核心模块
+│   ├── types.py              # 类型定义
+│   └── orchestrator.py       # 任务编排
+│
+├── vision/                   # 视觉模块
+│   ├── capture.py            # 屏幕捕获
+│   ├── ocr.py                # 文字识别
+│   ├── ui_parser.py          # UI 理解
+│   ├── diff_detector.py      # 差异检测
+│   ├── smart_compression.py  # 智能压缩
+│   └── image_cleaner.py      # 图片清理
+│
+├── action/                   # 操作模块
+│   ├── mouse.py              # 鼠标控制
+│   ├── keyboard.py           # 键盘控制
+│   ├── window.py             # 窗口管理
+│   └── safety.py             # 安全保护
+│
+├── planning/                 # 规划模块
+│   ├── memory.py             # 记忆系统
+│   └── planner.py            # 任务规划
+│
+├── ocularlimbs_service.py    # 后台服务
+├── ocularlimbs_client.py     # Python SDK
+├── agent.py                  # Agent 入口
+│
+└── ocularlimbs_workspace/    # 工作目录
+    ├── screenshots/          # 截图保存
+    ├── logs/                 # 日志文件
+    └── compression_samples/  # 压缩示例
 ```
 
-## 🔧 系统要求
+## 🛠️ 技术栈
 
-- Python 3.8+
-- Claude Code CLI
-- 依赖项见 `requirements.txt`
-
-### 可选依赖
-
-**Tesseract OCR**（用于更好的文字识别）：
-
-**Ubuntu/Debian:**
-```bash
-sudo apt-get install tesseract-ocr
-```
-
-**macOS:**
-```bash
-brew install tesseract
-```
-
-**Windows:**
-下载安装包：https://github.com/UB-Mannheim/tesseract/wiki
-
-## 🎯 MCP 工具列表
-
-| 工具 | 描述 | 参数 |
+| 组件 | 技术 | 说明 |
 |------|------|------|
-| `see` | 查看屏幕 | - |
-| `capture` | 捕获截图 | `filename` (可选), `compression` (可选) |
-| `find_text` | 查找文字 | `text` (必需) |
-| `click` | 点击坐标 | `x`, `y` (必需) |
-| `click_text` | 点击文字 | `text` (必需) |
-| `type_text` | 输入文本 | `text` (必需) |
-| `press_key` | 按键 | `key` (必需) |
-| `execute` | 执行任务 | `goal` (必需) |
-
-## 🔌 MCP 配置
-
-安装完成后，MCP 配置会自动添加到 `~/.claude/settings.json`：
-
-```json
-{
-  "mcpServers": {
-    "ocularlimbs": {
-      "command": "python",
-      "args": ["-m", "ocularlimbs.mcp_server"],
-      "env": {}
-    }
-  }
-}
-```
-
-## 🚦 故障排除
-
-### MCP 服务器未连接
-
-1. 确认安装完成：
-   ```bash
-   python -c "import ocularlimbs; print('OK')"
-   ```
-
-2. 检查 MCP 配置：
-   ```bash
-   cat ~/.claude/settings.json | grep -A 5 ocularlimbs
-   ```
-
-3. 测试 MCP 服务器：
-   ```bash
-   python -m ocularlimbs.mcp_server
-   ```
-
-### 权限问题（macOS）
-
-macOS 需要授予辅助功能权限：
-1. 打开"系统偏好设置" > "安全性与隐私" > "隐私"
-2. 选择"辅助功能"
-3. 添加 Python 或 Terminal
-
-### OCR 识别不准确
-
-安装 Tesseract OCR 可提高识别准确率（见上方"可选依赖"）。
+| 屏幕捕获 | mss | 跨平台 |
+| 图像处理 | Pillow, OpenCV | 压缩、识别 |
+| OCR | Tesseract, PaddleOCR | 文字识别 |
+| 输入控制 | pyautogui | 鼠标键盘 |
+| Web 服务 | HTTP Server | REST API |
+| 压缩 | JPEG, WebP, PNG | 多种格式 |
 
 ## 📚 文档
 
-- [技能文档](skills/ocularlimbs/SKILL.md) - 完整的使用指南
-- [MCP 协议](https://modelcontextprotocol.io/)
-- [Claude Code 文档](https://code.claude.com/docs)
+- [**一键安装指南**](一键安装指南.md) - 快速上手
+- [**服务使用指南**](SERVICE_GUIDE.md) - API 文档
+- [**压缩优化指南**](COMPRESSION_GUIDE.md) - 图片压缩
+- [**清理功能指南**](IMAGE_CLEANER_GUIDE.md) - 自动清理
+- [**项目总结**](PROJECT_SUMMARY.md) - 完整说明
 
-## 🤝 贡献
+## 🎁 快捷命令
 
-欢迎贡献！请随时提交 Issue 或 Pull Request。
+### Windows 快捷方式
 
-## 📄 许可证
+```
+双击 "启动_OcularLimbs.bat"  # 启动服务
+双击 "停止_OcularLimbs.bat"   # 停止服务
+```
 
-MIT License - 详见 [LICENSE](LICENSE)
+### Python SDK
 
-## 🙏 致谢
+```python
+# 查看屏幕
+from ocularlimbs_client import see
+info = see()
 
-- [Model Context Protocol](https://modelcontextprotocol.io/)
-- [Claude Code](https://code.claude.com)
-- [everything-claude-code](https://github.com/affaan-m/everything-claude-code) - 项目结构灵感
+# 捕获屏幕
+from ocularlimbs_client import capture
+capture('test.png')
+
+# 执行任务
+from ocularlimbs_client import execute
+execute("打开记事本")
+```
+
+### HTTP API
+
+```bash
+# 查看屏幕
+curl http://localhost:8848/api/see
+
+# 点击
+curl -X POST http://localhost:8848/api/click \
+  -H "Content-Type: application/json" \
+  -d '{"x": 100, "y": 200}'
+```
+
+## 🔧 配置选项
+
+### 基础配置
+
+```python
+from ocularlimbs import SystemConfig
+
+config = SystemConfig(
+    vision={'ocr_engine': 'paddleocr'},  # OCR 引擎
+    action={'safety_enabled': True},    # 安全模式
+    planning={'model': 'claude-sonnet-4-6'}  # AI 模型
+)
+```
+
+### 压缩配置
+
+```python
+# 使用 fast 预设（日常使用）
+client.capture(compression='fast')
+
+# 使用 ultra_fast 预设（实时）
+client.capture(compression='ultra_fast')
+```
+
+### 清理配置
+
+```python
+# 自动清理过期文件
+cleaner.clean_directory(
+    "screenshots",
+    max_age_days=7  # 保留7天
+)
+```
+
+## 🆘 故障排除
+
+### 问题: 服务无法启动
+
+```bash
+# 检查端口
+netstat -an | findstr 8848
+
+# 更换端口
+python ocularlimbs_service.py --port 8849
+```
+
+### 问题: 模块加载失败
+
+```bash
+# 重新安装依赖
+pip install -r requirements.txt
+
+# 重新安装项目
+pip install -e .
+```
+
+### 问题: OCR 不工作
+
+```bash
+# 安装 Tesseract
+# Windows: https://github.com/UB-Mannheim/tesseract/wiki
+
+# 或使用 PaddleOCR
+pip install paddleocr
+```
+
+## 🎯 最佳实践
+
+### 1. 日常使用
+
+```python
+# 使用 balanced 预设（最佳平衡）
+client = OcularLimbsClient()
+```
+
+### 2. 性能优先
+
+```python
+# 使用 fast 预设（快速响应）
+client.capture(compression='fast')
+```
+
+### 3. 质量优先
+
+```python
+# 使用 quality 预设（高准确率）
+client.capture(compression='quality')
+```
+
+### 4. 自动清理
+
+```python
+# 定期清理过期文件
+auto = AutoCleaner(directories=["screenshots"])
+auto.start()  # 后台自动清理
+```
+
+## 📊 性能指标
+
+| 指标 | 数值 | 说明 |
+|------|------|------|
+| 屏幕捕获 | <50ms | 实时捕获 |
+| OCR 识别 | 100-500ms | 取决于文字量 |
+| 图片压缩 | 200-400ms | 取决于预设 |
+| 鼠标操作 | <10ms | 几乎瞬时 |
+| 键盘操作 | <50ms | 包含延迟 |
+| API 响应 | <100ms | HTTP 请求 |
+
+## 🎉 总结
+
+### 核心优势
+
+- ✅ **一键安装**：双击即可使用
+- ✅ **图形界面**：可视化控制面板
+- ✅ **Web 管理**：浏览器直接操作
+- ✅ **Python SDK**：代码轻松调用
+- ✅ **自动启动**：开机后台运行
+- ✅ **智能压缩**：节省 90% 空间
+- ✅ **自动清理**：定期维护
+
+### 适用场景
+
+- 🎮 **游戏辅助**：类似 BetterGI
+- 🧪 **自动化测试**：UI 测试、E2E 测试
+- 🤖 **RPA 办公**：重复任务自动化
+- 👁️ **屏幕监控**：定期截图、状态监控
+- 🔬 **数据分析**：屏幕数据采集
+
+### 立即开始
+
+```bash
+# Windows 用户
+双击 "一键安装.bat"
+
+# 其他用户
+python install.py
+
+# 或使用 GUI
+python gui_launcher.py
+```
 
 ---
 
-**OcularLimbs - 让 AI 真正地看到和操作你的电脑！** 👁️🦾
+**OcularLimbs - 让 AI 拥有真正的眼睛和手脚！** 🎯👁️🦾
+
+**Made with ❤️ by Claude**
