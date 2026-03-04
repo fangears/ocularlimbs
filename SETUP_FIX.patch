@@ -1,0 +1,70 @@
+# setup.py 修复说明
+
+## 问题描述
+
+原始的 `setup.py` 没有正确配置 `src` 目录结构，导致：
+1. `pip install -e .` 安装后无法导入模块
+2. Python 找不到 `ocularlimbs` 包
+
+## 修复方案
+
+### 修改前
+
+```python
+setup(
+    name="ocularlimbs",
+    version="0.1.0",
+    author="Claude",
+    author_email="noreply@anthropic.com",
+    description="Eyes and Hands for AI - Computer Vision and Automation Framework",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/anthropics/ocularlimbs",
+    packages=find_packages(),  # ❌ 找不到 src 目录下的包
+    # ...
+)
+```
+
+### 修改后
+
+```python
+setup(
+    name="ocularlimbs",
+    version="0.1.0",
+    author="Claude",
+    author_email="noreply@anthropic.com",
+    description="Eyes and Hands for AI - Computer Vision and Automation Framework",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/anthropics/ocularlimbs",
+    package_dir={"": "src"},              # ✅ 指定包根目录
+    packages=find_packages(where="src"),  # ✅ 从 src 目录查找包
+    # ...
+)
+```
+
+## 影响
+
+- ✅ 修复后可以正常安装和使用
+- ✅ 支持 `pip install -e .` 可编辑安装
+- ✅ 模块可以正常导入
+- ✅ MCP 服务器可以正常启动
+
+## 测试
+
+```bash
+# 安装
+pip install -e .
+
+# 验证导入
+python -c "import ocularlimbs; print(ocularlimbs.__version__)"
+
+# 验证 MCP 服务器
+python -m ocularlimbs.mcp_server --help
+```
+
+## 相关文件
+
+- `setup.py` - 需要修复的核心文件
+- `WINDOWS_MCP_SETUP.md` - Windows 配置指南
+- `pyproject.toml` - 如果存在，也需要相应配置
