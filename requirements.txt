@@ -1,0 +1,36 @@
+# OcularLimbs 核心依赖
+
+# 屏幕捕获
+mss>=9.0.1
+
+# 图像处理
+Pillow>=10.0.0
+opencv-python>=4.8.0
+numpy>=1.24.0
+
+# OCR
+pytesseract>=0.3.10
+
+# 输入控制
+pyautogui>=0.9.54
+pygetwindow>=0.0.9
+
+# Web 服务
+flask>=3.0.0
+flask-cors>=4.0.0
+
+# 日志
+loguru>=0.7.0
+
+# 配置管理
+pydantic>=2.0.0
+python-dotenv>=1.0.0
+
+# 工具
+click>=8.1.0
+rich>=13.0.0
+requests>=2.31.0
+
+# 测试
+pytest>=7.4.0
+pytest-asyncio>=0.21.0

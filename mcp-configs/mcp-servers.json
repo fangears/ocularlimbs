@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "ocularlimbs": {
+      "command": "python",
+      "args": [
+        "-m",
+        "ocularlimbs.mcp_server"
+      ],
+      "env": {
+        "OCULARLIMBS_HOME": "~/.ocularlimbs"
+      }
+    }
+  }
+}
