@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # install.sh — OcularLimbs 一键安装脚本
 #
-# Usage:
+# 用法:
 #   ./install.sh
-#   curl -fsSL https://raw.githubusercontent.com/fangears/ocularlimbs/main/install.sh | bash
 #
-# 支持: Linux, macOS, Windows(WSL)
+# 此脚本会：
+#   1. 安装 Python 依赖
+#   2. 配置 MCP 服务器到 Claude Code
+#   3. 安装技能和命令
 
 set -euo pipefail
 
@@ -13,265 +15,142 @@ set -euo pipefail
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# 日志函数
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
+# 获取脚本目录
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
+echo -e "${GREEN}"
+echo "╔════════════════════════════════════════════════╗"
+echo "║        OcularLimbs - AI 的眼和手脚             ║"
+echo "║    Eyes and Hands for Claude Code              ║"
+echo "╚════════════════════════════════════════════════╝"
+echo -e "${NC}"
 
-log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
-}
+# 检查 Python
+if ! command -v python3 &> /dev/null; then
+    echo -e "${RED}错误: 未找到 Python 3${NC}"
+    echo "请先安装 Python 3.8 或更高版本"
+    exit 1
+fi
 
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
+PYTHON_VERSION=$(python3 --version | cut -d' ' -f2)
+echo -e "${GREEN}✓${NC} 检测到 Python ${PYTHON_VERSION}"
 
-# 检测操作系统
-detect_os() {
-    case "$(uname -s)" in
-        Linux*)     OS=linux;;
-        Darwin*)    OS=macos;;
-        MINGW*|MSYS*|CYGWIN*) OS=windows;;
-        *)          OS=unknown;;
-    esac
-    log_info "检测到操作系统: $OS"
-}
+# 检查 pip
+if ! command -v pip3 &> /dev/null && ! command -v pip &> /dev/null; then
+    echo -e "${RED}错误: 未找到 pip${NC}"
+    exit 1
+fi
 
-# 检测 Python 版本
-check_python() {
-    log_info "检查 Python 环境..."
+PIP_CMD=$(command -v pip3 &> /dev/null && echo "pip3" || echo "pip")
+echo -e "${GREEN}✓${NC} 检测到 pip"
 
-    if ! command -v python3 &> /dev/null; then
-        log_error "未找到 Python 3，请先安装 Python 3.8+"
-        exit 1
-    fi
-
-    PYTHON_VERSION=$(python3 --version | cut -d' ' -f2 | cut -d'.' -f1,2)
-    log_info "Python 版本: $PYTHON_VERSION"
-}
-
-# 检测并创建虚拟环境
-setup_venv() {
-    log_info "设置虚拟环境..."
-
-    VENV_DIR="$HOME/.ocularlimbs/venv"
-
-    if [ ! -d "$VENV_DIR" ]; then
-        log_info "创建虚拟环境: $VENV_DIR"
-        python3 -m venv "$VENV_DIR"
-    fi
-
-    # 激活虚拟环境
-    source "$VENV_DIR/bin/activate"
-    log_success "虚拟环境已激活"
-}
-
-# 安装依赖
-install_dependencies() {
-    log_info "安装 Python 依赖..."
-
-    # 升级 pip
-    pip install --upgrade pip -q
-
-    # 安装依赖
-    pip install -r requirements.txt -q
-
-    log_success "依赖安装完成"
-}
-
-# 安装核心模块
-install_core() {
-    log_info "安装 OcularLimbs 核心模块..."
-
-    CORE_DIR="$HOME/.ocularlimbs"
-    mkdir -p "$CORE_DIR"
-
-    # 复制核心文件
-    cp -r src/* "$CORE_DIR/"
-
-    log_success "核心模块安装完成"
-}
-
-# 配置 MCP 服务器
-configure_mcp() {
-    log_info "配置 MCP 服务器..."
-
-    CLAUDE_DIR="$HOME/.claude"
-    MCP_CONFIG="$CLAUDE_DIR/claude_desktop_config.json"
-
-    # 创建 .claude 目录
+# 检查 Claude Code 配置目录
+CLAUDE_DIR="$HOME/.claude"
+if [[ ! -d "$CLAUDE_DIR" ]]; then
+    echo -e "${YELLOW}创建 Claude Code 配置目录${NC}"
     mkdir -p "$CLAUDE_DIR"
+fi
 
-    # 备份现有配置
-    if [ -f "$MCP_CONFIG" ]; then
-        BACKUP="$MCP_CONFIG.backup.$(date +%Y%m%d%H%M%S)"
-        log_info "备份现有配置: $BACKUP"
-        cp "$MCP_CONFIG" "$BACKUP"
-    fi
+# 安装 Python 包
+echo ""
+echo -e "${YELLOW}正在安装 Python 依赖...${NC}"
+cd "$SCRIPT_DIR"
 
-    # 创建或更新配置
-    if [ ! -f "$MCP_CONFIG" ]; then
-        echo '{"mcpServers":{}}' > "$MCP_CONFIG"
-    fi
+if [[ -f "requirements.txt" ]]; then
+    $PIP_CMD install -e . -q
+    echo -e "${GREEN}✓${NC} Python 依赖安装完成"
+else
+    echo -e "${RED}错误: 未找到 requirements.txt${NC}"
+    exit 1
+fi
 
-    # 添加 OcularLimbs MCP 服务器
-    python3 scripts/update_mcp_config.py
+# 检查 settings.json
+SETTINGS_FILE="$CLAUDE_DIR/settings.json"
+if [[ ! -f "$SETTINGS_FILE" ]]; then
+    echo "{}" > "$SETTINGS_FILE"
+fi
 
-    log_success "MCP 配置完成"
+# 添加 MCP 服务器配置
+echo ""
+echo -e "${YELLOW}配置 MCP 服务器...${NC}"
+
+# 使用 Python 来安全地修改 JSON
+python3 << 'PYTHON_SCRIPT'
+import json
+import os
+import sys
+
+claude_dir = os.path.expanduser("~/.claude")
+settings_file = os.path.join(claude_dir, "settings.json")
+
+# 读取现有配置
+try:
+    with open(settings_file, 'r', encoding='utf-8') as f:
+        settings = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError):
+    settings = {}
+
+# 确保 mcpServers 存在
+if "mcpServers" not in settings:
+    settings["mcpServers"] = {}
+
+# 添加 ocularlimbs MCP 服务器
+settings["mcpServers"]["ocularlimbs"] = {
+    "command": "python",
+    "args": ["-m", "ocularlimbs.mcp_server"],
+    "env": {}
 }
 
-# 安装系统依赖（Tesseract 等）
-install_system_deps() {
-    log_info "安装系统依赖..."
+# 写回文件
+with open(settings_file, 'w', encoding='utf-8') as f:
+    json.dump(settings, f, indent=2, ensure_ascii=False)
 
-    case "$OS" in
-        linux)
-            if command -v apt-get &> /dev/null; then
-                sudo apt-get update -qq
-                sudo apt-get install -y tesseract-ocr libtesseract-dev poppler-utils -qq
-            elif command -v yum &> /dev/null; then
-                sudo yum install -y tesseract tesseract-devel poppler-utils -q
-            elif command -v brew &> /dev/null; then
-                brew install tesseract poppler -q
-            fi
-            ;;
-        macos)
-            if command -v brew &> /dev/null; then
-                brew install tesseract poppler -q
-            else
-                log_warn "建议安装 Homebrew: https://brew.sh"
-            fi
-            ;;
-        windows)
-            log_warn "Windows 用户请手动安装 Tesseract: https://github.com/UB-Mannheim/tesseract/wiki"
-            ;;
-    esac
+print("✓ MCP 服务器配置已添加")
+PYTHON_SCRIPT
 
-    log_success "系统依赖安装完成"
-}
+# 安装技能
+echo ""
+echo -e "${YELLOW}安装技能和命令...${NC}"
 
-# 创建快捷命令
-create_commands() {
-    log_info "创建快捷命令..."
+# 创建 skills 目录
+SKILLS_DIR="$CLAUDE_DIR/skills/ocularlimbs"
+mkdir -p "$SKILLS_DIR"
 
-    BIN_DIR="$HOME/.local/bin"
-    mkdir -p "$BIN_DIR"
+# 复制技能文件
+if [[ -f "skills/ocularlimbs/SKILL.md" ]]; then
+    cp "skills/ocularlimbs/SKILL.md" "$SKILLS_DIR/"
+    echo -e "${GREEN}✓${NC} 技能文件已安装"
+fi
 
-    # 创建 ocularlimbs 命令
-    cat > "$BIN_DIR/ocularlimbs" << 'EOF'
-#!/usr/bin/env bash
-source "$HOME/.ocularlimbs/venv/bin/activate"
-python3 -m ocularlimbs "$@"
-EOF
+# 创建 commands 目录
+COMMANDS_DIR="$CLAUDE_DIR/commands"
+mkdir -p "$COMMANDS_DIR"
 
-    chmod +x "$BIN_DIR/ocularlimbs"
+# 复制命令文件
+if [[ -f "commands/see.md" ]]; then
+    cp "commands/see.md" "$COMMANDS_DIR/"
+fi
+if [[ -f "commands/capture.md" ]]; then
+    cp "commands/capture.md" "$COMMANDS_DIR/"
+fi
+if [[ -f "commands/click.md" ]]; then
+    cp "commands/click.md" "$COMMANDS_DIR/"
+fi
 
-    # 添加到 PATH（如果需要）
-    if ! echo "$PATH" | grep -q "$BIN_DIR"; then
-        echo "" >> ~/.bashrc
-        echo "# OcularLimbs" >> ~/.bashrc
-        echo "export PATH=\"$BIN_DIR:\$PATH\"" >> ~/.bashrc
-        log_info "已添加到 PATH，请运行: source ~/.bashrc"
-    fi
+echo -e "${GREEN}✓${NC} 命令文件已安装"
 
-    log_success "快捷命令创建完成"
-}
-
-# 启动服务
-start_service() {
-    log_info "启动 OcularLimbs 服务..."
-
-    # 后台启动服务
-    nohup python3 -m ocularlimbs.service > /dev/null 2>&1 &
-
-    # 等待服务就绪
-    sleep 3
-
-    log_success "服务已启动"
-}
-
-# 运行测试
-run_test() {
-    log_info "运行测试..."
-
-    python3 -m ocularlimbs test
-
-    log_success "测试完成"
-}
-
-# 显示完成信息
-show_completion() {
-    cat << 'EOF'
-
-╔════════════════════════════════════════════════════════════╗
-║                                                            ║
-║     ✨ OcularLimbs 安装成功！                              ║
-║                                                            ║
-╚════════════════════════════════════════════════════════════╝
-
-📚 快速开始:
-
-    # 在 Claude Code 中直接使用
-    from ocularlimbs import see, capture, click
-
-    # 查看屏幕
-    screen = see()
-
-    # 捕获截图
-    capture('test.png')
-
-    # 点击屏幕
-    click(100, 200)
-
-🔗 Web 管理界面:
-
-    http://localhost:8848
-
-📖 文档:
-
-    https://github.com/fangears/ocularlimbs
-
-🔄 重启服务:
-
-    ocularlimbs restart
-
-🛑 停止服务:
-
-    ocularlimbs stop
-
-EOF
-}
-
-# 主安装流程
-main() {
-    echo ""
-    echo "╔════════════════════════════════════════════════════════════╗"
-    echo "║                                                            ║"
-    echo "║     👁️  OcularLimbs - AI 的眼睛和手脚                     ║"
-    echo "║     🦾 一键安装脚本                                        ║"
-    echo "║                                                            ║"
-    echo "╚════════════════════════════════════════════════════════════╝"
-    echo ""
-
-    detect_os
-    check_python
-    setup_venv
-    install_dependencies
-    install_core
-    install_system_deps
-    configure_mcp
-    create_commands
-    start_service
-    run_test
-    show_completion
-}
-
-# 运行主程序
-main "$@"
+# 完成
+echo ""
+echo -e "${GREEN}╔════════════════════════════════════════════════╗"
+echo "║              安装完成！                                ║"
+echo "╚════════════════════════════════════════════════╝${NC}"
+echo ""
+echo "现在你可以："
+echo "  1. 重启 Claude Code"
+echo "  2. 使用 MCP 工具: see(), capture(), click(), type_text() 等"
+echo "  3. 或使用命令: /see, /capture, /click"
+echo ""
+echo -e "${YELLOW}注意: 首次使用时，服务会自动启动${NC}"
+echo ""

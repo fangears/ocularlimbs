@@ -1,0 +1,25 @@
+{
+  "name": "ocularlimbs",
+  "version": "1.0.0",
+  "description": "Eyes and Hands for AI - Computer vision and automation framework that gives Claude Code the ability to see your screen and control your mouse/keyboard",
+  "author": {
+    "name": "Claude",
+    "url": "https://github.com/anthropics/ocularlimbs"
+  },
+  "homepage": "https://github.com/anthropics/ocularlimbs",
+  "repository": "https://github.com/anthropics/ocularlimbs",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "computer-vision",
+    "automation",
+    "ocr",
+    "screen-capture",
+    "mouse-control",
+    "keyboard-control",
+    "mcp-server",
+    "ai-tools"
+  ],
+  "skills": ["./skills/"],
+  "agents": []
+}

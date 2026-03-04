@@ -5,13 +5,29 @@ OcularLimbs MCP 服务器
 
 import asyncio
 import json
+import sys
+import logging
 from typing import Any
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Tool, TextContent
 
+# 配置日志
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger("ocularlimbs.mcp")
+
 # 导入客户端
-from .client import see, capture, find_text, click, click_text, type_text, press_key, execute
+try:
+    from .client import see, capture, find_text, click, click_text, type_text, press_key, execute
+    logger.info("OcularLimbs 客户端导入成功")
+except ImportError as e:
+    logger.error(f"无法导入 OcularLimbs 客户端: {e}")
+    sys.stderr.write(f"错误: {e}\n")
+    sys.stderr.write("请确保已正确安装 OcularLimbs: pip install -e .\n")
+    sys.exit(1)
 
 # 创建 MCP 服务器实例
 server = Server("ocularlimbs")
@@ -147,9 +163,12 @@ async def list_tools() -> list[Tool]:
 async def call_tool(name: str, arguments: Any) -> list[TextContent]:
     """处理工具调用"""
 
+    logger.info(f"调用工具: {name}, 参数: {arguments}")
+
     try:
         if name == "see":
             result = see()
+            logger.info(f"see() 结果: 屏幕尺寸 {result.get('width', 0)}x{result.get('height', 0)}")
             return [TextContent(
                 type="text",
                 text=json.dumps(result, ensure_ascii=False, indent=2)
@@ -159,6 +178,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             filename = arguments.get("filename")
             compression = arguments.get("compression", "balanced")
             result = capture(filename, compression)
+            logger.info(f"capture() 完成: filename={filename}, compression={compression}")
             return [TextContent(
                 type="text",
                 text=json.dumps(result, ensure_ascii=False, indent=2)
@@ -167,6 +187,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
         elif name == "find_text":
             text = arguments.get("text")
             result = find_text(text)
+            logger.info(f"find_text('{text}') 结果: found={result.get('found', False)}")
             return [TextContent(
                 type="text",
                 text=json.dumps(result, ensure_ascii=False, indent=2)
@@ -175,7 +196,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
         elif name == "click":
             x = arguments.get("x")
             y = arguments.get("y")
+            logger.info(f"click({x}, {y})")
             result = click(x, y)
+            logger.info(f"click() 结果: success={result}")
             return [TextContent(
                 type="text",
                 text=json.dumps({"success": result}, ensure_ascii=False)
@@ -183,7 +206,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
         elif name == "click_text":
             text = arguments.get("text")
+            logger.info(f"click_text('{text}')")
             result = click_text(text)
+            logger.info(f"click_text() 结果: success={result}")
             return [TextContent(
                 type="text",
                 text=json.dumps({"success": result}, ensure_ascii=False)
@@ -191,7 +216,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
         elif name == "type_text":
             text = arguments.get("text")
+            logger.info(f"type_text('{text[:50]}...')")
             result = type_text(text)
+            logger.info(f"type_text() 结果: success={result}")
             return [TextContent(
                 type="text",
                 text=json.dumps({"success": result}, ensure_ascii=False)
@@ -199,7 +226,9 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
         elif name == "press_key":
             key = arguments.get("key")
+            logger.info(f"press_key('{key}')")
             result = press_key(key)
+            logger.info(f"press_key() 结果: success={result}")
             return [TextContent(
                 type="text",
                 text=json.dumps({"success": result}, ensure_ascii=False)
@@ -207,19 +236,23 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
         elif name == "execute":
             goal = arguments.get("goal")
+            logger.info(f"execute('{goal[:50]}...')")
             result = execute(goal)
+            logger.info(f"execute() 结果: {str(result)[:100]}")
             return [TextContent(
                 type="text",
                 text=json.dumps(result, ensure_ascii=False, indent=2)
             )]
 
         else:
+            logger.warning(f"未知工具: {name}")
             return [TextContent(
                 type="text",
                 text=f"未知工具: {name}"
             )]
 
     except Exception as e:
+        logger.error(f"工具调用出错: {name}, 错误: {e}", exc_info=True)
         return [TextContent(
             type="text",
             text=json.dumps({"error": str(e)}, ensure_ascii=False)
