@@ -71,6 +71,176 @@ click(100, 200)
 type_text("Hello World")
 ```
 
+## 🔗 Claude Code MCP 集成
+
+将 OcularLimbs 作为 MCP 服务器集成到 Claude Code，让 AI 直接拥有视觉和操作能力！
+
+### 快速配置
+
+#### 1. 安装 OcularLimbs
+
+```bash
+# 克隆项目
+git clone https://github.com/fangears/ocularlimbs.git ~/.ocularlimbs
+cd ~/.ocularlimbs
+
+# 安装包（可编辑模式）
+pip install -e .
+```
+
+#### 2. 配置 Claude Code MCP 服务器
+
+编辑 `~/.claude.json` 文件，添加以下配置：
+
+```json
+{
+  "mcpServers": {
+    "ocularlimbs": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["-m", "ocularlimbs.mcp_server"],
+      "env": {}
+    }
+  }
+}
+```
+
+或使用 Python 脚本自动添加：
+
+```python
+import json
+
+config_path = r"C:\Users\Administrator\.claude.json"
+
+with open(config_path, 'r', encoding='utf-8') as f:
+    config = json.load(f)
+
+if 'mcpServers' not in config:
+    config['mcpServers'] = {}
+
+config['mcpServers']['ocularlimbs'] = {
+    "type": "stdio",
+    "command": "python",
+    "args": ["-m", "ocularlimbs.mcp_server"],
+    "env": {}
+}
+
+with open(config_path, 'w', encoding='utf-8') as f:
+    json.dump(config, f, indent=2, ensure_ascii=False)
+```
+
+#### 3. 重启 Claude Code
+
+重启后，ocularlimbs 应该出现在已连接的 MCP 服务器列表中。
+
+### 验证安装
+
+```bash
+# 验证包安装
+python -c "import ocularlimbs; print(ocularlimbs.__version__)"
+
+# 验证 MCP 服务器模块
+python -c "from ocularlimbs import mcp_server; print('MCP server module loaded')"
+```
+
+### 可用的 MCP 工具
+
+配置成功后，Claude Code 将拥有以下能力：
+
+#### 👁️ 视觉工具
+- `see()` - 查看屏幕信息，获取屏幕尺寸、文字数量和元素列表
+- `capture()` - 捕获屏幕截图并保存到文件
+
+#### 🖱️ 操作工具
+- `click()` - 鼠标点击指定坐标
+- `type_text()` - 键盘输入文本
+- `press_key()` - 按下指定按键
+
+#### 🔍 搜索工具
+- `find_text()` - 在屏幕上查找文字位置
+- `click_text()` - 点击包含指定文字的元素
+
+### 故障排除
+
+#### 问题：模块导入失败
+
+```bash
+ModuleNotFoundError: No module named 'ocularlimbs'
+```
+
+**解决方案**：
+1. 确认在项目根目录：`cd ~/.ocularlimbs`
+2. 重新安装：`pip install -e .`
+3. 验证安装：`pip show ocularlimbs`
+
+#### 问题：MCP 服务器无法连接
+
+**检查步骤**：
+1. 包是否正确安装：`pip show ocularlimbs`
+2. 模块是否可导入：`python -c "import ocularlimbs.mcp_server"`
+3. 配置文件是否正确：检查 `~/.claude.json` 中的配置
+
+#### 问题：setup.py 包结构错误
+
+如果遇到包结构问题，确保 `setup.py` 包含以下配置：
+
+```python
+setup(
+    name="ocularlimbs",
+    package_dir={"": "src"},              # 重要！
+    packages=find_packages(where="src"),  # 重要！
+    # ...
+)
+```
+
+### 配置示例
+
+完整的 `~/.claude.json` 配置示例：
+
+```json
+{
+  "mcpServers": {
+    "ocularlimbs": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["-m", "ocularlimbs.mcp_server"],
+      "env": {}
+    },
+    "github": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "your_token_here"
+      }
+    }
+  }
+}
+```
+
+### Windows 特定说明
+
+在 Windows 系统上配置时：
+
+1. **路径格式**：使用原始字符串或双反斜杠
+   ```python
+   config_path = r"C:\Users\Administrator\.claude.json"
+   ```
+
+2. **编码问题**：使用 UTF-8 编码读写 JSON
+   ```python
+   with open(config_path, 'r', encoding='utf-8') as f:
+       config = json.load(f)
+   ```
+
+3. **权限问题**：确保有写入 `~/.claude.json` 的权限
+
+### 测试环境
+
+- ✅ Windows 11 + Python 3.12 + Claude Code 2.1.63
+- ✅ macOS 14 + Python 3.11 + Claude Code 2.1.63
+- ✅ Linux Ubuntu 22.04 + Python 3.10 + Claude Code 2.1.63
+
 ## 📊 核心功能
 
 ### 1. 视觉能力 👁️
